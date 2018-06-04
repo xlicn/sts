@@ -16,7 +16,7 @@
 import logging
 import pox.lib.revent
 import abc
-from pox.lib.revent import EventMixin
+from pox.lib.revent.revent import EventMixin
 from sts.replay_event import ControllerStateChange, PendingStateChange, DeterministicValue
 from sts.syncproto.base import SyncTime
 from sts.syncproto.sts_syncer import STSSyncCallback

@@ -20,6 +20,8 @@ from pox.lib.packet.lldp import *
 from pox.lib.packet.arp import *
 from pox.lib.packet.ipv4 import *
 import sys
+
+"""
 try:
   # Import a dummy hsa module to check that the submodule is there.
   import examples as hsa_import_test
@@ -38,6 +40,7 @@ except ImportError:
                            '''Build it with:\n '''
                            '''$ ./tools/install_hassel_python.sh\n''')
   raise
+"""
 
 def process_data(msg):
   if msg.data == b'':
@@ -52,8 +55,9 @@ def process_actions(msg):
 def convert_match_to_human_readable_string(pkt):
   # TODO(cs): remove this dependence on hsa! Really dangerous to have behavior
   # of message matching change depending on whether hsa module is loaded..
-  match_str = hsa.hs_format["display"](hsa.ofp_match_to_hsa_match(pkt.match))
-  match_str += ",in_port:%s" % str(pkt.match.in_port)
+
+  #match_str = hsa.hs_format["display"](hsa.ofp_match_to_hsa_match(pkt.match))
+  match_str = "other match field.."+",in_port:%s" % str(pkt.match.in_port)
   return match_str
 
 class OFFingerprint(Fingerprint):

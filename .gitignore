@@ -12,10 +12,8 @@ old.*
 ext/*
 /exp/
 /experiments/
-/pox/
 /betta/
 /betta
-/pox
 pox/lib/pxpcap/pxpcap_c/build
 pox/lib/pxpcap/pxpcap_c/WpdPack
 pypy/

@@ -25,7 +25,7 @@ sts_path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
 
 sts_modules = ( ("sts", sts_path),
                 ("pox", sts_path + "/pox"),
-                ("hassel", sts_path + "/sts/hassel")
+                #("hassel", sts_path + "/sts/hassel")
                 )
 
 def dump_metadata(metadata_file, additional_metadata=None):

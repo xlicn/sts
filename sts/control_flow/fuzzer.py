@@ -52,10 +52,12 @@ class Fuzzer(ControlFlow):
   for invariant violations. (Not the proper use of the term `Fuzzer`)
   '''
   def __init__(self, simulation_cfg, fuzzer_params="config.fuzzer_params",
-               check_interval=None, traffic_inject_interval=10, random_seed=None,
+               #check_interval=None,
+               traffic_inject_interval=10, random_seed=None,
                delay=0.1, steps=None, input_logger=None,
-               invariant_check_name="InvariantChecker.check_correspondence",
-               halt_on_violation=False, log_invariant_checks=True,
+               #invariant_check_name="InvariantChecker.check_correspondence",
+               halt_on_violation=False,
+               #log_invariant_checks=True,
                delay_startup=True, print_buffers=True,
                record_deterministic_values=False,
                mock_link_discovery=False,
@@ -89,6 +91,7 @@ class Fuzzer(ControlFlow):
     self.sync_callback = RecordingSyncCallback(input_logger,
                            record_deterministic_values=record_deterministic_values)
 
+    """
     self.check_interval = check_interval
     if self.check_interval is None:
       print >> sys.stderr, "Fuzzer Warning: Check interval is not specified... not checking invariants"
@@ -99,6 +102,8 @@ class Fuzzer(ControlFlow):
     self.invariant_check_name = invariant_check_name
     self.invariant_check = name_to_invariant_check[invariant_check_name]
     self.log_invariant_checks = log_invariant_checks
+    """
+
     self.traffic_inject_interval = traffic_inject_interval
     # Make execution deterministic to allow the user to easily replay
     if random_seed is None:
@@ -248,10 +253,12 @@ class Fuzzer(ControlFlow):
         try:
           if not self._initializing():
             self.trigger_events()
+            ''' do not check anymore
             halt = self.maybe_check_invariant()
             if halt:
               self.simulation.set_exit_code(5)
               break
+            '''
             self.maybe_inject_trace_event()
           else:  # Initializing
             self.check_pending_messages(pass_through=True)

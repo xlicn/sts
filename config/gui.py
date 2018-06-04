@@ -6,7 +6,7 @@ from sts.simulation_state import SimulationConfig
 
 # Use POX as our controller
 start_cmd = "./pox.py --no-cli --verbose openflow.of_01 --address=__address__ --port=__port__ sts.syncproto.pox_syncer samples.topo forwarding.l2_learning"
-controllers = [ControllerConfig(start_cmd, cwd="pox", address="127.0.0.1", port=8888, sync="tcp:localhost:18888")]
+controllers = [ControllerConfig(start_cmd, cwd="/home/xing/code/controllers/pox", address="127.0.0.1", port=8888, sync="tcp:localhost:18888")]
 topology_class = FatTree
 topology_params = "num_pods=2, gui=True"
 dataplane_trace = "dataplane_traces/ping_pong_same_subnet.trace"
