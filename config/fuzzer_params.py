@@ -1,5 +1,5 @@
-switch_failure_rate = 0.005
-switch_recovery_rate = 0.09
+switch_failure_rate = 0.0
+switch_recovery_rate = 0.0
 dataplane_drop_rate = 0.0
 controlplane_block_rate = 0.0
 controlplane_unblock_rate = 1.0
@@ -11,7 +11,7 @@ link_failure_rate = 0.005
 link_recovery_rate = 0.09
 controller_crash_rate = 0.0
 controller_recovery_rate = 0.0
-traffic_generation_rate = 0.08
+traffic_generation_rate = 1.0
 host_migration_rate = 0.0
 intracontroller_block_rate = 0.0
 intracontroller_unblock_rate = 0.0

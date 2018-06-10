@@ -255,8 +255,8 @@ class SoftwareSwitch(EventMixin):
       else:
         return self.port_stats[req.port_no]
 
-    def queue_stats(ofp):
-      raise AttributeError("not implemented")
+    #def queue_stats(ofp):
+      #raise AttributeError("not implemented")
 
     stats_handlers = {
         OFPST_DESC: desc_stats,
@@ -264,19 +264,19 @@ class SoftwareSwitch(EventMixin):
         OFPST_AGGREGATE: aggregate_stats,
         OFPST_TABLE: table_stats,
         OFPST_PORT: port_stats,
-        OFPST_QUEUE: queue_stats
+        #OFPST_QUEUE: queue_stats
     }
 
     if ofp.type in stats_handlers:
       handler = stats_handlers[ofp.type]
-    else:
-      raise AttributeError("Unsupported stats request type %d" % ofp.type)
+    #else:
+      #raise AttributeError("Unsupported stats request type %d" % ofp.type)
 
-    body=handler(ofp)
-    self.log.debug("Type: %s" % str(ofp.type))
-    reply = ofp_stats_reply(xid=ofp.xid, body=body)
-    self.log.debug("Sending stats reply %s %s", self.name, str(reply))
-    self.send(reply)
+      body=handler(ofp)
+      self.log.debug("Type: %s" % str(ofp.type))
+      reply = ofp_stats_reply(xid=ofp.xid, body=body)
+      self.log.debug("Sending stats reply %s %s", self.name, str(reply))
+      self.send(reply)
 
   def _receive_set_config(self, config):
     self.log.debug("Set config %s %s", self.name, str(config))
@@ -657,8 +657,8 @@ class OFConnection (object):
     if len(message) < 4:
       return (None, 0)
 
-    if ord(message[0]) != OFP_VERSION:
-      raise ValueError("Bad OpenFlow version (" + str(ord(message[0])) + ")")
+    #if ord(message[0]) != OFP_VERSION:
+      #raise ValueError("Bad OpenFlow version (" + str(ord(message[0])) + ")")
 
     # OpenFlow parsing occurs here:
     ofp_type = ord(message[1])
@@ -680,7 +680,7 @@ class OFConnection (object):
       try:
         (msg_obj, packet_length) = OFConnection.parse_of_packet(message)
       except ValueError as e:
-        e = ValueError(e.__str__() + "on connection " + str(self))
+        e = ValueError(e.__str__() + " on connection " + str(self))
         if self.error_handler:
           return self.error_handler(e)
         else:

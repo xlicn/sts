@@ -54,6 +54,7 @@ def default_boot_controllers(controller_configs, snapshot_service,
       c, sync_connection_manager=sync_connection_manager,
       snapshot_service=snapshot_service)
     controller.start(multiplex_sockets=multiplex_sockets)
+
     log.info("Launched controller %s: %s [PID %d]" %
              (str(c.cid), " ".join(c.expanded_start_cmd), controller.pid))
     controllers.append(controller)
@@ -334,6 +335,7 @@ class Simulation(object):
     while controller_info.address == "__address__":
       log.debug("Waiting for controller address for %s..." % controller_info.label)
       time.sleep(5)
+
     if self.multiplex_sockets:
       socket_ctor = STSMockSocket
     else:

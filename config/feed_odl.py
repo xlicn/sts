@@ -19,4 +19,4 @@ simulation_config = SimulationConfig(controller_configs=controllers,
 control_flow = Runner(simulation_config,
                       #halt_on_violation=True,
                       input_logger=InputLogger(),
-                      steps=100)
+                      steps=300)

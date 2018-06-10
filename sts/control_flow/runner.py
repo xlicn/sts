@@ -215,6 +215,7 @@ class Runner(ControlFlow):
         assert(isinstance(switch, FuzzSoftwareSwitch))
         switch.use_delayed_commands()
         switch.randomize_flow_mods()
+
     return self.loop()
 
   def loop(self):
@@ -236,6 +237,8 @@ class Runner(ControlFlow):
 
     # signal.signal returns the previous interrupt handler.
     self.old_interrupt = signal.signal(signal.SIGINT, interrupt)
+
+
 
     try:
       # Always connect to controllers explicitly
