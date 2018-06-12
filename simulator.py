@@ -18,11 +18,11 @@
 # limitations under the License.
 
 import sys
-if sys.version_info < (2, 7):
-  raise RuntimeError('''Must use python 2.7 or greater. '''
-                     '''See http://www.python.org/download/releases/2.7.4/''')
 
-from sts.util.procutils import kill_procs
+if sys.version_info < (2, 7):
+    raise RuntimeError('''Must use python 2.7 or greater. '''
+                       '''See http://www.python.org/download/releases/2.7.4/''')
+
 from sts.control_flow.fuzzer import Fuzzer
 from sts.simulation_state import SimulationConfig
 import sts.experiments.setup as experiment_setup
@@ -30,8 +30,6 @@ import sts.experiments.lifecycle as exp_lifecycle
 
 import signal
 import argparse
-import logging
-import logging.config
 
 description = """
 Run a simulation.
@@ -70,38 +68,40 @@ args = parser.parse_args()
 
 # Allow configs to be specified as paths as well as module names
 if args.config.endswith('.py'):
-  args.config = args.config[:-3].replace("/", ".")
+    args.config = args.config[:-3].replace("/", ".")
 
 try:
-  config = __import__(args.config, globals(), locals(), ["*"])
+    config = __import__(args.config, globals(), locals(), ["*"])
 except ImportError as e:
-  try:
-    # module path might not have been specified. Try again with path prepended
-    config = __import__("config.%s" % args.config, globals(), locals(), ["*"])
-  except ImportError:
-    raise e
+    try:
+        # module path might not have been specified. Try again with path prepended
+        config = __import__("config.%s" % args.config, globals(), locals(), ["*"])
+    except ImportError:
+        raise e
 
 # Set up the experiment results directories
 experiment_setup.setup_experiment(args, config)
 
 # Simulator controls the simulation
 if hasattr(config, 'control_flow'):
-  simulator = config.control_flow
+    simulator = config.control_flow
 else:
-  # We default to a Fuzzer
-  simulator = Fuzzer(SimulationConfig())
+    # We default to a Fuzzer
+    simulator = Fuzzer(SimulationConfig())
+
 
 # Set an interrupt handler
 def handle_int(signal, frame):
-  import os
-  from sts.util.rpc_forker import LocalForker
-  sys.stderr.write("Caught signal %d, stopping sdndebug (pid %d)\n" %
-                    (signal, os.getpid()))
-  if (simulator.simulation_cfg.current_simulation is not None):
-    simulator.simulation_cfg.current_simulation.clean_up()
-  # kill fork()ed procs
-  LocalForker.kill_all()
-  sys.exit(13)
+    import os
+    from sts.util.rpc_forker import LocalForker
+    sys.stderr.write("Caught signal %d, stopping sdndebug (pid %d)\n" %
+                     (signal, os.getpid()))
+    if (simulator.simulation_cfg.current_simulation is not None):
+        simulator.simulation_cfg.current_simulation.clean_up()
+    # kill fork()ed procs
+    LocalForker.kill_all()
+    sys.exit(13)
+
 
 signal.signal(signal.SIGINT, handle_int)
 signal.signal(signal.SIGTERM, handle_int)
@@ -109,14 +109,14 @@ signal.signal(signal.SIGQUIT, handle_int)
 
 # Start the simulation
 try:
-  # First tell simulator where to log
-  simulator.init_results(config.results_dir)
-  # Now start the simulation
-  simulation = simulator.simulate()
+    # First tell simulator where to log
+    simulator.init_results(config.results_dir)
+    # Now start the simulation
+    simulation = simulator.simulate()
 finally:
-  if (simulator.simulation_cfg.current_simulation is not None):
-    simulator.simulation_cfg.current_simulation.clean_up()
-  if args.publish:
-    exp_lifecycle.publish_results(config.exp_name, config.results_dir)
+    if (simulator.simulation_cfg.current_simulation is not None):
+        simulator.simulation_cfg.current_simulation.clean_up()
+    if args.publish:
+        exp_lifecycle.publish_results(config.exp_name, config.results_dir)
 
 sys.exit(simulation.exit_code)

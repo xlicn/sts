@@ -34,16 +34,18 @@ of switches, with one host connected to each switch. For example, with N = 3:
                   host3
 '''
 
-from sts.fingerprints.messages import DPFingerprint
-from invariant_checker import InvariantChecker
-from entities import FuzzSoftwareSwitch, Link, Host, HostInterface, AccessLink, NamespaceHost
-from pox.openflow.software_switch import DpPacketOut, SoftwareSwitch
-from pox.openflow.libopenflow_01 import *
-from pox.lib.revent import EventMixin
-from sts.util.console import msg
 import itertools
 import logging
 from collections import defaultdict
+from pprint import pprint
+
+from entities import FuzzSoftwareSwitch, Link, Host, HostInterface, AccessLink, NamespaceHost
+from invariant_checker import InvariantChecker
+from pox.lib.revent import EventMixin
+from pox.openflow.libopenflow_01 import *
+from pox.openflow.software_switch import DpPacketOut, SoftwareSwitch
+from sts.fingerprints.messages import DPFingerprint
+from sts.util.console import msg
 
 log = logging.getLogger("sts.topology")
 
@@ -96,7 +98,7 @@ def create_host(ingress_switch_or_switches, mac_or_macs=None, ip_or_ips=None,
         ips = [ip_or_ips]
 
     interfaces = []
-    interface_switch_pairs = []
+    interface_switch_port_pairs = []
     for switch in switches:
         port = get_switch_port(switch)
         if macs:
@@ -110,13 +112,13 @@ def create_host(ingress_switch_or_switches, mac_or_macs=None, ip_or_ips=None,
 
         name = "eth%d" % switch.dpid
         interface = HostInterface(mac, ip_addr, name)
-        interface_switch_pairs.append((interface, switch))
+        interface_switch_port_pairs.append((interface, switch, port))
         interfaces.append(interface)
 
     name = "host:" + ",".join(map(lambda interface: "%s" % str(interface.ips), interfaces))
     host = Host(interfaces, name)
-    access_links = [AccessLink(host, interface, switch, get_switch_port(switch))
-                    for interface, switch in interface_switch_pairs]
+    access_links = [AccessLink(host, interface, switch, port)
+                    for interface, switch, port in interface_switch_port_pairs]
     return (host, access_links)
 
 
@@ -860,6 +862,108 @@ class MeshTopology(Topology):
                     port2internal_link[switch_j_port] = link_j2i
             self.port2internal_link = port2internal_link
 
+            LinkTracker.__init__(self, dpid2switch, port2access_link,
+                                 interface2access_link, port2internal_link)
+
+
+class CustomTopology(Topology):
+    def __init__(self, topology_params={}, create_io_worker=None, ip_format_str="123.123.%d.%d"):
+        '''
+        Build a custom topology.
+
+        Optional argument(s):
+          - topology_params: a dict have five fixed keys: 'hosts', 'edge_switches', 'internal_switches',
+            'access_links', 'internal_links'.
+          - ip_format_str: a format string for assigning IP addresses to hosts.
+            Takes two digits to be interpolated, the switch dpid and the port
+            number. For example, "10.%d.%d.255" will assign hosts the IP address
+            10.DPID.PORT_NUMBER.255, where DPID is the dpid of their ingress
+            switch, and PORT_NUMBER is the number of the switch's access link.
+        '''
+        Topology.__init__(self, create_io_worker=create_io_worker)
+
+        num_switches = len(topology_params.get('edge_switches')) + len(topology_params.get('internal_switches'))
+
+        switch_ports = {}
+        switch_hosts = {}
+        for sw in topology_params.get('edge_switches'):
+            switch_ports[int(sw.replace('s', ''))] = 0
+            switch_hosts[int(sw.replace('s', ''))] = 0
+        for sw in topology_params.get('internal_switches'):
+            switch_ports[int(sw.replace('s', ''))] = 0
+            switch_hosts[int(sw.replace('s', ''))] = 0
+        for al in topology_params.get('access_links'):
+            for node in al:
+                if node[0] == 's':
+                    switch_ports[int(node.replace('s', ''))] = switch_ports[int(node.replace('s', ''))] + 1
+                else:
+                    switch_hosts[int(al[1].replace('s', ''))] = switch_hosts[int(al[1].replace('s', ''))] + 1
+        for il in topology_params.get('internal_links'):
+            for node in il:
+                switch_ports[int(node.replace('s', ''))] = switch_ports[int(node.replace('s', ''))] + 1
+
+        print(num_switches)
+        pprint(switch_ports)
+        pprint(switch_hosts)
+
+        # Initialize switches
+        switches = []
+        for (switch_id, ports) in switch_ports.items():
+            switches.append(create_switch(switch_id, ports))
+        self._populate_dpid2switch(switches)
+
+        def get_access_port(switch):
+            switch_ports[switch.dpid] = switch_ports[switch.dpid] - 1
+            return switch.ports[switch_ports[switch.dpid] + 1]
+
+        host_access_link_pairs = []
+        for switch in self.switches:
+            for i in range(0, switch_hosts[switch.dpid]):
+                host_access_link_pairs.append(
+                    create_host(switch, ip_format_str=ip_format_str, get_switch_port=get_access_port))
+        access_link_list_list = []
+        for host, access_link_list in host_access_link_pairs:
+            self.hid2host[host.hid] = host
+            print(host.hid)
+            access_link_list_list.append(access_link_list)
+
+        # this is python's .flatten:
+        access_links = list(itertools.chain.from_iterable(access_link_list_list))
+
+        # grab a fully meshed patch panel to wire up these guys
+        internal_links = []
+        for node1, node2 in topology_params.get('internal_links'):
+            internal_links.append((int(node1.replace('s', '')), int(node2.replace('s', ''))))
+
+        self.link_tracker = CustomTopology.CustomLinks(self.dpid2switch, access_links, internal_links, switch_ports)
+        self.get_connected_port = self.link_tracker
+
+    class CustomLinks(LinkTracker):
+        '''
+        A factory method (inner class) for creating a custom network.
+        Connects internal links of switches skipping the self-connections.
+        '''
+
+        def __init__(self, dpid2switch, access_links=[], internal_links=[], switch_ports={}):
+            port2access_link = {access_link.switch_port: access_link
+                                for access_link in access_links}
+            interface2access_link = {access_link.interface: access_link
+                                     for access_link in access_links}
+            port2internal_link = {}
+            for switch_i_id, switch_j_id in internal_links:
+                switch_i = dpid2switch[switch_i_id]
+                switch_j = dpid2switch[switch_j_id]
+                switch_i_port = switch_i.ports[switch_ports[switch_i_id]]
+                switch_j_port = switch_j.ports[switch_ports[switch_j_id]]
+                switch_ports[switch_i_id] = switch_ports[switch_i_id] - 1
+                switch_ports[switch_j_id] = switch_ports[switch_j_id] - 1
+                if switch_ports[switch_i_id] < 0 or switch_ports[switch_j_id] < 0:
+                    raise ValueError("port number not sufficient")
+                link_i2j = Link(switch_i, switch_i_port, switch_j, switch_j_port)
+                link_j2i = link_i2j.reversed_link()
+                port2internal_link[switch_i_port] = link_i2j
+                port2internal_link[switch_j_port] = link_j2i
+            self.port2internal_link = port2internal_link
             LinkTracker.__init__(self, dpid2switch, port2access_link,
                                  interface2access_link, port2internal_link)
 
