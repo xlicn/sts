@@ -882,25 +882,23 @@ class CustomTopology(Topology):
         '''
         Topology.__init__(self, create_io_worker=create_io_worker)
 
-        num_switches = len(topology_params.get('edge_switches')) + len(topology_params.get('internal_switches'))
+        num_switches = len(topology_params.get('switches'))
 
         switch_ports = {}
         switch_hosts = {}
-        for sw in topology_params.get('edge_switches'):
+        for sw in topology_params.get('switches'):
             switch_ports[int(sw.replace('s', ''))] = 0
             switch_hosts[int(sw.replace('s', ''))] = 0
-        for sw in topology_params.get('internal_switches'):
-            switch_ports[int(sw.replace('s', ''))] = 0
-            switch_hosts[int(sw.replace('s', ''))] = 0
-        for al in topology_params.get('access_links'):
-            for node in al:
-                if node[0] == 's':
-                    switch_ports[int(node.replace('s', ''))] = switch_ports[int(node.replace('s', ''))] + 1
-                else:
-                    switch_hosts[int(al[1].replace('s', ''))] = switch_hosts[int(al[1].replace('s', ''))] + 1
-        for il in topology_params.get('internal_links'):
-            for node in il:
-                switch_ports[int(node.replace('s', ''))] = switch_ports[int(node.replace('s', ''))] + 1
+        for node1, node2 in topology_params.get('access_links'):
+            if node1[0] == 's':  # the front one is switch
+                edge_switch_id = int(node1.replace('s', ''))
+            else:
+                edge_switch_id = int(node2.replace('s', ''))
+            switch_ports[edge_switch_id] = switch_ports[edge_switch_id] + 1
+            switch_hosts[edge_switch_id] = switch_hosts[edge_switch_id] + 1
+        for node1, node2 in topology_params.get('internal_links'):
+            switch_ports[int(node1.replace('s', ''))] = switch_ports[int(node1.replace('s', ''))] + 1
+            switch_ports[int(node2.replace('s', ''))] = switch_ports[int(node2.replace('s', ''))] + 1
 
         print(num_switches)
         pprint(switch_ports)
@@ -930,11 +928,11 @@ class CustomTopology(Topology):
         # this is python's .flatten:
         access_links = list(itertools.chain.from_iterable(access_link_list_list))
 
-        # grab a fully meshed patch panel to wire up these guys
+        # grab a custom patch panel to wire up these guys
         internal_links = []
         for node1, node2 in topology_params.get('internal_links'):
             internal_links.append((int(node1.replace('s', '')), int(node2.replace('s', ''))))
-
+        pprint(internal_links)
         self.link_tracker = CustomTopology.CustomLinks(self.dpid2switch, access_links, internal_links, switch_ports)
         self.get_connected_port = self.link_tracker
 
@@ -958,7 +956,7 @@ class CustomTopology(Topology):
                 switch_ports[switch_i_id] = switch_ports[switch_i_id] - 1
                 switch_ports[switch_j_id] = switch_ports[switch_j_id] - 1
                 if switch_ports[switch_i_id] < 0 or switch_ports[switch_j_id] < 0:
-                    raise ValueError("port number not sufficient")
+                    raise ValueError("port number is not sufficient")
                 link_i2j = Link(switch_i, switch_i_port, switch_j, switch_j_port)
                 link_j2i = link_i2j.reversed_link()
                 port2internal_link[switch_i_port] = link_i2j

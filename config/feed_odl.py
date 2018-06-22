@@ -11,8 +11,7 @@ controllers = [ControllerConfig(start_cmd, cwd="/home/xing/code/controllers/dist
 topology_class = CustomTopology
 topology_params = {
     'hosts': ['h1', 'h2', 'h3', 'h4', 'h5'],
-    'edge_switches': ['s1', 's2', 's3'],
-    'internal_switches': ['s4'],
+    'switches': ['s1', 's2', 's3', 's4'],
     'access_links': [('h1', 's1'), ('h2', 's1'), ('h3', 's2'), ('h4', 's2'), ('h5', 's3')],
     'internal_links': [('s1', 's2'), ('s2', 's4'), ('s1', 's4'), ('s3', 's4')]
 }
