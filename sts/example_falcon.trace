@@ -1,0 +1,8 @@
+HREQ+378+1513077431522+249+/restconf/operations/secure-state:set-secure-state+2033338551+POST+200+127.0.0.1+49788+{"input":{"level":"level-2"}}+
+REST+378+1513077431531+313+invokeRpc+AbsoluteSchemaPath{path=[(urn:opendaylight:packet:loop-remover-config?revision=2014-05-28)self-destruct]}+
+MRPC+378+1513077431531+85+org.opendaylight.l2switch.loopremover.security.SelfDistructImpl@28b3aaa6+
+PNOT+378+1513077431549+236+org/opendaylight/l2switch/loopremover/security/SelfDistructImpl+NetworkDestruct [_dropAll=true, augmentation=[]]+
+MNOT+218+1513077431595+85+org.opendaylight.l2switch.security.SelfDestructHandler@99a4d68+NetworkDestruct [_dropAll=true, augmentation=[]]+
+DBRR+218+1513077431599+239+org/opendaylight/l2switch/security/SelfDestructHandler+read+org.opendaylight.controller.md.sal.binding.impl.BindingDOMReadTransactionAdapter@1f266f5b+CONFIGURATION+InstanceIdentifier{targetType=interface org.opendaylight.yang.gen.v1.urn.opendaylight.packet.address.tracker.config.rev160621.SelfDestructSwitch, path=[org.opendaylight.yang.gen.v1.urn.opendaylight.packet.address.tracker.config.rev160621.SelfDestructSwitch]}+Optional.of(SelfDestructSwitch{isSwitch=true, augmentations={}})+
+ENOT+218+1513077431599+239+
+HRES+378+1513077431647+249+2033338551+200+

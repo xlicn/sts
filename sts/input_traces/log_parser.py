@@ -31,7 +31,7 @@ must the following key:
 '''
 
 import json
-import sts.replay_event as event
+import sts.falcon_event as event
 import logging
 log = logging.getLogger("superlog_parser")
 
