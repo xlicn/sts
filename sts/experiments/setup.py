@@ -23,6 +23,9 @@ import shutil
 import re
 import logging
 
+from sts.util.falcon_tools import BackupRestorer
+
+
 def setup_experiment(args, config):
   # Grab parameters
   if args.exp_name:
@@ -86,14 +89,23 @@ def setup_experiment(args, config):
 
   con = config.control_flow.simulation_cfg.controller_configs
 
+  # prepare controller restore
+  if hasattr(config, 'backupPath') and hasattr(config, 'karafHome'):
+    backupPath = config.backupPath
+    karafHome = config.karafHome
+    backupRestorer = BackupRestorer(backupPath, karafHome)
+    backupRestorer.setup()
+
   def builtin_pox_controller(c):
     # pox/ is already accounted for in metadata.
     return ("POXController" in str(c.controller_class) and
             c.cwd is not None and
             re.match("^pox[/]?", c.cwd) is not None)
 
+  """
   if (not hasattr(config, "get_additional_metadata") and
       find(lambda c: not builtin_pox_controller(c),
            config.control_flow.simulation_cfg.controller_configs) is not None):
     log.warn('''No get_additional_metadata() defined for config file. See '''
              '''config/nox_routing.py for an example.''')
+  """

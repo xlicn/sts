@@ -81,7 +81,6 @@ except ImportError as e:
 
 # Set up the experiment results directories
 experiment_setup.setup_experiment(args, config)
-
 # Simulator controls the simulation
 if hasattr(config, 'control_flow'):
     simulator = config.control_flow
